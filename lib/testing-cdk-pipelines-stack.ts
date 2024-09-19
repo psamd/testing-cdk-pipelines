@@ -5,6 +5,7 @@ import {
   CodePipelineSource,
   ShellStep,
 } from "aws-cdk-lib/pipelines";
+import { MyPipelineAppStage } from "./my-pipeline-app-stage";
 
 export class TestingCdkPipelinesStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -12,6 +13,7 @@ export class TestingCdkPipelinesStack extends cdk.Stack {
 
     const pipeline = new CodePipeline(this, "CDKPipeline", {
       pipelineName: "CDKPipeline",
+      crossAccountKeys: true,
       synth: new ShellStep("Synth", {
         input: CodePipelineSource.gitHub(
           "psamd/testing-cdk-pipelines",
@@ -20,5 +22,11 @@ export class TestingCdkPipelinesStack extends cdk.Stack {
         commands: ["npm ci", "npm run build", "npx cdk synth"],
       }),
     });
+
+    const stage = pipeline.addStage(
+      new MyPipelineAppStage(this, "LOCAL", {
+        env: { account: "871477291615", region: "us-west-1" },
+      })
+    );
   }
 }
